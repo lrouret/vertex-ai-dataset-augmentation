@@ -34,4 +34,32 @@ def create_or_delete_folder(folder,image_folder_name):
             print("❗ Réponse invalide. Arrêt du script.")
             exit()
             
+def convert_point_ratio_to_pixel(image,point):
+    img_shape = image.shape
+    if len(img_shape) == 3:
+        (height, width, _) = image.shape
+    elif len(img_shape) == 2:
+        (height, width) = image.shape
+    else:
+        print("Trop de couches pour cette image")
+        exit()
+    return (float(point[0])*width,float(point[1])*height)
 
+def convert_pixel_to_ratio(image,point):
+    img_shape = image.shape
+    if len(img_shape) == 3:
+        (height, width, _) = image.shape
+    elif len(img_shape) == 2:
+        (height, width) = image.shape
+    else:
+        print("Trop de couches pour cette image")
+        exit()
+    return (float(point[0])/width,float(point[1])/height)
+    
+def precision(value):
+    if value < 0.00001:
+        return 0
+    elif value > 1.0:
+        return 1.0
+    else:
+        return value

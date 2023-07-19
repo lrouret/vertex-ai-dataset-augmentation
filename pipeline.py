@@ -14,7 +14,8 @@ OUTPUT_PREPOC_DT = "preproc_ds"
 OUTPUT_AUGM_DT = "aug_ds"
 
 IMAGES_FOLDER_NAME = "images"
-ANNOTATION_FILE = "local_annotations.csv"
+
+ANNOTATION_FILE = "annotations.csv"
 
 # A changer en fonction des évolutions de VERTEX AI
 ANNOTATION_HEADER= ["IMAGE_URI","LABEL","X_MIN_A","Y_MIN_A","X_MAX_B","Y_MIN_B","X_MAX_C","Y_MAX_C","X_MIN_D","Y_MAX_D"]
@@ -34,6 +35,9 @@ SOURCE_DATASET = args.input_dataset
 disable_verification = args.no_check
 force_delete_output_file = args.force_delete
 bucket_url=args.bucket
+
+
+
 
 
 ANNOTATION_FILE_PATH="{0}/{1}".format(SOURCE_DATASET,ANNOTATION_FILE)

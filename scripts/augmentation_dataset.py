@@ -3,6 +3,7 @@ import uuid
 from imgaug import augmenters as iaa
 from imgaug.augmentables.bbs import BoundingBox, BoundingBoxesOnImage
 import cv2
+from scripts.utils import *
 
 def process_aug(images):
     augmented_images = []
@@ -29,15 +30,18 @@ def process_aug(images):
         augmented_images.append(image)
         new_image = copy.deepcopy(image)
 
-        bbs = BoundingBoxesOnImage([
-            BoundingBox(
-                min(float(anno["X_MIN_A"]), float(anno["X_MIN_D"]), float(anno["X_MAX_B"]), float(anno["X_MAX_C"])), 
-                min(float(anno["Y_MIN_A"]), float(anno["Y_MIN_B"]), float(anno["Y_MAX_C"]), float(anno["Y_MAX_D"])), 
-                max(float(anno["X_MIN_A"]), float(anno["X_MIN_D"]), float(anno["X_MAX_B"]), float(anno["X_MAX_C"])), 
-                max(float(anno["Y_MIN_A"]), float(anno["Y_MIN_B"]), float(anno["Y_MAX_C"]), float(anno["Y_MAX_D"]))
-            ) for anno in new_image.annotations
-        ], shape=new_image.cv_image.shape)
+        bounding_boxes = []
+        
+        for anno in new_image.annotations:
+            a_ratio=(anno["X_MIN_A"],anno["Y_MIN_A"])
+            c_ratio=(anno["X_MAX_C"],anno["Y_MAX_C"])
+            
+            a_pixel = convert_point_ratio_to_pixel(new_image.cv_image,a_ratio)
+            c_pixel = convert_point_ratio_to_pixel(new_image.cv_image,c_ratio)
 
+            bounding_boxes.append(BoundingBox(x1=a_pixel[0],x2=c_pixel[0],y1=a_pixel[1],y2=c_pixel[1]))
+
+        bbs = BoundingBoxesOnImage(bounding_boxes, shape=new_image.cv_image.shape)
 
         for aug in augmentations:
             if new_image.cv_image.shape[-1] != 3:
@@ -47,14 +51,16 @@ def process_aug(images):
             new_image.cv_image = image_aug
             for idx, anno in enumerate(new_image.annotations):
                 bb = bbs_aug[idx]
-                anno["X_MIN_A"] = bb.x1
-                anno["Y_MIN_A"] = bb.y1
-                anno["X_MAX_B"] = bb.x1
-                anno["Y_MIN_B"] = bb.y2
-                anno["X_MAX_C"] = bb.x2
-                anno["Y_MAX_C"] = bb.y2
-                anno["X_MIN_D"] = bb.x2
-                anno["Y_MAX_D"] = bb.y1
+                a_ratio = convert_pixel_to_ratio(new_image.cv_image,(bb.x1,bb.y1))
+                c_ratio = convert_pixel_to_ratio(new_image.cv_image,(bb.x2,bb.y2))
+                anno["X_MIN_A"] = precision(a_ratio[0])
+                anno["Y_MIN_A"] = precision(a_ratio[1])
+                anno["X_MAX_B"] = precision(c_ratio[0])
+                anno["Y_MIN_B"] = precision(a_ratio[1])
+                anno["X_MAX_C"] = precision(c_ratio[0])
+                anno["Y_MAX_C"] = precision(c_ratio[1])
+                anno["X_MIN_D"] = precision(a_ratio[0])
+                anno["Y_MAX_D"] = precision(c_ratio[1])
             
             new_image.basename = "{0}_{1}".format(aug.name,uuid.uuid4())
             augmented_images.append(copy.deepcopy(new_image))
