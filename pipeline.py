@@ -77,7 +77,7 @@ for _, _, files in os.walk(IMAGES_PATH):
     for image_file in files:
         image_annotations = list(filter(lambda item : item["IMAGE_URI"] == image_file,annotations))
         filename_splitted = image_file.split(".")
-        filename = ''.join(filename_splitted[:-1])
+        filename = '.'.join(filename_splitted[:-1])
         extension = filename_splitted[-1]
         cv_image = cv2.imread("{0}/{1}".format(IMAGES_PATH,image_file))
         
