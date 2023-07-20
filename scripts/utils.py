@@ -1,5 +1,7 @@
 import os
 import shutil
+import cv2
+import copy
 
 def get_all_folder_name_in_folder(folder_path):
     folder_names = []
@@ -43,7 +45,14 @@ def convert_point_ratio_to_pixel(image,point):
     else:
         print("Trop de couches pour cette image")
         exit()
-    return (float(point[0])*width,float(point[1])*height)
+        
+    x_point = int(float(point[0])*width)
+    y_point = int(float(point[1])*height)
+    
+    x_point = max(0, min(x_point, width-1))
+    y_point = max(0, min(y_point, height-1))
+    
+    return (x_point,y_point)
 
 def convert_pixel_to_ratio(image,point):
     img_shape = image.shape
@@ -54,12 +63,37 @@ def convert_pixel_to_ratio(image,point):
     else:
         print("Trop de couches pour cette image")
         exit()
-    return (float(point[0])/width,float(point[1])/height)
+        
+    x_point = float(point[0])/width
+    y_point = float(point[1])/height
     
-def precision(value):
-    if value < 0.00001:
-        return 0
-    elif value > 1.0:
-        return 1.0
-    else:
-        return value
+    x_point = max(0.00001, min(x_point, 0.9999999))
+    y_point = max(0.00001, min(y_point, 0.9999999))
+    
+    return (x_point,y_point)
+    
+    
+def display(image):
+    
+    new_image = copy.deepcopy(image)
+    
+    if len(new_image.annotations) == 0:
+        return
+    
+    for annotation in new_image.annotations:
+        # Convert normalized coordinates back to pixel values
+        print("======")
+        print("X_MIN_A:{}".format(annotation['X_MIN_A']))
+        print("Y_MIN_A:{}".format(annotation['Y_MIN_A']))
+        print("X_MAX_C:{}".format(annotation['X_MAX_C']))
+        print("Y_MAX_C:{}".format(annotation['Y_MAX_C']))
+        a = convert_point_ratio_to_pixel(new_image.cv_image,(annotation['X_MIN_A'], annotation['Y_MIN_A']))
+        c = convert_point_ratio_to_pixel(new_image.cv_image,(annotation['X_MAX_C'], annotation['Y_MAX_C']))
+
+        # Draw rectangle on the image
+        cv2.rectangle(new_image.cv_image, a, c, (0, 255, 0), 2)
+
+    # Display the image
+    cv2.imshow('Image with annotations', new_image.cv_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()

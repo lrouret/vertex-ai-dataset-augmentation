@@ -110,8 +110,6 @@ def export_dataset(images, OUPUT):
         
     new_annotations_file = "{0}/{1}".format(OUPUT,ANNOTATION_FILE)
     
-    
-    
     with open(new_annotations_file, 'w', newline='') as output_file:
         dict_writer = csv.DictWriter(output_file, fieldnames=ANNOTATION_HEADER)
         dict_writer.writeheader()
