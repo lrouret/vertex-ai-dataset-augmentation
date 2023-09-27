@@ -2,7 +2,7 @@
 
 [Lien google](https://cloud.google.com/vertex-ai/docs/image-data/object-detection/prepare-data?hl=fr#csv)
 
-# Install
+## Install
 
 ```bash
 git clone GIT_URL vertexAIDatasetAugmentation
@@ -11,9 +11,9 @@ pip3 install -r requirements.txt
 python3 pipeline.py ...params
 ```
 
-# Principe
+## Principe
 
-## In
+### In
 L'outil prends en entrée un dataset sous forme:
 - source_ds (dossier parent)
     - annotations.csv
@@ -21,7 +21,7 @@ L'outil prends en entrée un dataset sous forme:
 
 Exemple de annotation.csv est disponible [ici](./exemple_annotations.csv)
 
-## Out
+### Out
 
 - un dossier "preproc_dt", qui représente le dataset apres là phase de preprocessing
 - un dossier "dataug_dt", qui représente le dataset apres là phase d'augmentation
@@ -29,7 +29,7 @@ Exemple de annotation.csv est disponible [ici](./exemple_annotations.csv)
 
 final_dt sera le dossier à importer dans vertex
 
-# Usage
+## Usage
 
 ```
 usage: pipeline.py [-h] [-i INPUT_DATASET] [-nc NO_CHECK] [-fc FORCE_DELETE] [-b BUCKET]
@@ -51,7 +51,7 @@ exemple d'augmentation sur le dossier inital "dataset" et pour le bucket "gs://m
 python3 pipeline.py -i dataset -b "gs://monbucket"
 ```
 
-# Attention
+## Attention
 
 Pour le bucket.
 
@@ -63,3 +63,7 @@ Pour le bucket.
 
 - gs://monbucket/
 - "gs://monbucket/dossier/"
+
+# Tiling
+
+Un script pour faire du tiling est disponible [ICI](./scripts/tile_images.py)
