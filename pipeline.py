@@ -8,7 +8,7 @@ import csv
 import time 
 import cv2
 
-DEFAULT_SOURCE_DT_NAME = "source_ds"
+DEFAULT_SOURCE_DT_NAME = "test"
 
 OUTPUT_PREPOC_DT = "preproc_ds"
 OUTPUT_AUGM_DT = "aug_ds"
@@ -141,7 +141,7 @@ print("\n------- BILAN -------")
 print("🏁 Commencé avec {0} finit avec {1} ".format(init_image,len(images_aug)))
 
 print("\n📃 INPUT:\n{0}".format(os.path.abspath(SOURCE_DATASET)))
-print("\n📈 OUTPUT:\nPrétraitement: \n{0}\n\nAugmentation:\n{1}".format(os.path.abspath(OUTPUT_PREPOC_DT),os.path.abspath(OUTPUT_AUGM_DT)))
+print("\n📈 OUTPUT:\nPrétraitement: \n{0}\n\nnPrétraitement + Augmentation:\n{1}".format(os.path.abspath(OUTPUT_PREPOC_DT),os.path.abspath(OUTPUT_AUGM_DT)))
 print("\n------- FIN -------")
 
 

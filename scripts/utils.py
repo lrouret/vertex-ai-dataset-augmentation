@@ -2,6 +2,7 @@ import os
 import shutil
 import cv2
 import copy
+from imgaug.augmentables.bbs import BoundingBox
 
 def get_all_folder_name_in_folder(folder_path):
     folder_names = []
@@ -82,11 +83,6 @@ def display(image):
     
     for annotation in new_image.annotations:
         # Convert normalized coordinates back to pixel values
-        print("======")
-        print("X_MIN_A:{}".format(annotation['X_MIN_A']))
-        print("Y_MIN_A:{}".format(annotation['Y_MIN_A']))
-        print("X_MAX_C:{}".format(annotation['X_MAX_C']))
-        print("Y_MAX_C:{}".format(annotation['Y_MAX_C']))
         a = convert_point_ratio_to_pixel(new_image.cv_image,(annotation['X_MIN_A'], annotation['Y_MIN_A']))
         c = convert_point_ratio_to_pixel(new_image.cv_image,(annotation['X_MAX_C'], annotation['Y_MAX_C']))
 
@@ -97,3 +93,17 @@ def display(image):
     cv2.imshow('Image with annotations', new_image.cv_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+
+def define_bounding_boxes_from_annotation(image):
+    bounding_boxes=[]
+    for anno in image.annotations:
+            a_ratio=(anno["X_MIN_A"],anno["Y_MIN_A"])
+            c_ratio=(anno["X_MAX_C"],anno["Y_MAX_C"])
+            
+            a_pixel = convert_point_ratio_to_pixel(image.cv_image,a_ratio)
+            c_pixel = convert_point_ratio_to_pixel(image.cv_image,c_ratio)
+
+            bounding_boxes.append(BoundingBox(x1=a_pixel[0],x2=c_pixel[0],y1=a_pixel[1],y2=c_pixel[1]))
+            
+    return bounding_boxes

@@ -5,69 +5,67 @@ from imgaug.augmentables.bbs import BoundingBox, BoundingBoxesOnImage
 import cv2
 from scripts.utils import *
 
+def is_valid_bbox(bbox):
+    # Teste si la bounding box est valide (représente un rectangle)
+    return bbox.is_fully_within_image(bbox.shape)
+
 def process_aug(images):
     augmented_images = []
-    augmentations = augmentations = [
-        iaa.Fliplr(0.5),
-        iaa.Flipud(0.2), 
+    augmentations = [
+        iaa.Flipud(0.5), 
         iaa.Crop(percent=(0, 0.1)), 
-        iaa.Sometimes(0.5, iaa.GaussianBlur(sigma=(0, 0.5))),
-        iaa.LinearContrast((0.75, 1.5)),
-        iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05*255), per_channel=0.5),
         iaa.Affine(
             scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
             translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
-            rotate=(-5, 5),
-            shear=(-4, 4)
+            rotate=(-9, 9),
+            shear=(-5, 5)
         ),
-        iaa.LinearContrast((0.5, 2.0), per_channel=0.5),
-        iaa.Invert(0.05, per_channel=False),
-        iaa.Grayscale(alpha=(0.0, 1.0))
+        iaa.Invert(0.25, per_channel=False),
     ]
 
-    
     for image in images:
-        augmented_images.append(image)
-        new_image = copy.deepcopy(image)
-
-        bounding_boxes = []
+        temp_image = copy.deepcopy(image)
         
-        for anno in new_image.annotations:
-            a_ratio=(anno["X_MIN_A"],anno["Y_MIN_A"])
-            c_ratio=(anno["X_MAX_C"],anno["Y_MAX_C"])
+        if temp_image.cv_image.shape[-1] != 3:
+            temp_image.cv_image = cv2.cvtColor(temp_image.cv_image, cv2.COLOR_GRAY2BGR)
             
-            a_pixel = convert_point_ratio_to_pixel(new_image.cv_image,a_ratio)
-            c_pixel = convert_point_ratio_to_pixel(new_image.cv_image,c_ratio)
-
-            # Adjust the bounding box coordinates to fit OpenCV's expectations
-            bounding_boxes.append(BoundingBox(x1=a_pixel[0],x2=c_pixel[0],y1=c_pixel[1],y2=a_pixel[1]))
-
-        bbs = BoundingBoxesOnImage(bounding_boxes, shape=new_image.cv_image.shape)
-
+        image_aug = temp_image
+        
         for aug in augmentations:
-            new_image = copy.deepcopy(image)
-            if new_image.cv_image.shape[-1] != 3:
-                new_image.cv_image = cv2.cvtColor(new_image.cv_image, cv2.COLOR_GRAY2BGR)
-            image_aug, bbs_aug = aug(image=new_image.cv_image, bounding_boxes=bbs)
+            # On crée une nouvelle image
+            new_image = copy.deepcopy(image_aug)
+            new_image.basename = str(uuid.uuid4())
             
-            new_image.cv_image = image_aug
-            new_image.basename = uuid.uuid4()
-            for idx, anno in enumerate(new_image.annotations):
-                bb = bbs_aug[idx]
-                a_ratio = convert_pixel_to_ratio(new_image.cv_image,(bb.x1,bb.y1))
-                b_ratio = convert_pixel_to_ratio(new_image.cv_image,(bb.x1,bb.y2))
-                c_ratio = convert_pixel_to_ratio(new_image.cv_image,(bb.x2,bb.y2))
-                d_ratio = convert_pixel_to_ratio(new_image.cv_image,(bb.x2,bb.y1))
-                anno["IMAGE_URI"] = "{0}.{1}".format(new_image.basename,new_image.extension)
-                anno["X_MIN_A"] = a_ratio[0]
-                anno["Y_MIN_A"] = a_ratio[1]
-                anno["X_MAX_B"] = b_ratio[0]
-                anno["Y_MIN_B"] = b_ratio[1]
-                anno["X_MAX_C"] = c_ratio[0]
-                anno["Y_MAX_C"] = c_ratio[1]
-                anno["X_MIN_D"] = d_ratio[0]
-                anno["Y_MAX_D"] = d_ratio[1]
-            augmented_images.append(copy.deepcopy(new_image))
+            # On récupére les box de l'image précedente
+            initial_bbs = define_bounding_boxes_from_annotation(new_image)
+            
+            #On effectue l'augmentation sur l'ancienne image
+            cv_image_aug, bbs_aug = aug(image=new_image.cv_image, bounding_boxes=initial_bbs)
+            # Si toutes les bounding boxes sont valides, on ajoute l'image augmentée
 
-    
+            #Il faut maintenant maj les valeurs des annotations dans l'objet Image
+            new_image.update_annotations_from_bbs(bbs_aug)
+            
+            #MaJ l'image en elle même
+            new_image.cv_image = cv_image_aug
+            
+            #display(new_image)
+            
+            #On effectue un dernière copie pour éviter toute réference
+            final_copy=copy.deepcopy(new_image)
+            
+            image_aug=final_copy # Image utilisé à la prochaine itération
+            augmented_images.append(final_copy)
+
+
     return augmented_images
+
+
+# POUR CHAQUE images
+#     COPIER image
+#     POUR CHAQUE augmentation
+#         COPIER image
+#         RECUPERER box
+#         APPLIQUER aug
+#         POUR CHAQUE box DE image 
+#             MAJ box
